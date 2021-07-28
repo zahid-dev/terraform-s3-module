@@ -10,17 +10,6 @@ resource "aws_s3_bucket" "this" {
   force_destroy       = var.force_destroy
   acceleration_status = var.acceleration_status
 
-  dynamic "website" {
-    for_each = length(keys(var.website)) == 0 ? [] : [var.website]
-
-    content {
-      index_document           = lookup(website.value, "index_document", null)
-      error_document           = lookup(website.value, "error_document", null)
-      redirect_all_requests_to = lookup(website.value, "redirect_all_requests_to", null)
-      routing_rules            = lookup(website.value, "routing_rules", null)
-    }
-  }
-
   cors_rule {
     allowed_headers = var.cors_allowed_headers
     allowed_methods = var.cors_allowed_methods
@@ -95,6 +84,17 @@ resource "aws_s3_bucket" "this" {
     }
   }
 
+  dynamic "website" {
+    for_each = length(keys(var.website)) == 0 ? [] : [var.website]
+
+    content {
+      index_document           = lookup(website.value, "index_document", null)
+      error_document           = lookup(website.value, "error_document", null)
+      redirect_all_requests_to = lookup(website.value, "redirect_all_requests_to", null)
+      routing_rules            = lookup(website.value, "routing_rules", null)
+    }
+  }
+
   dynamic "server_side_encryption_configuration" {
     for_each = var.server_side_encryption_configuration
     content {
@@ -137,6 +137,25 @@ resource "aws_s3_bucket" "this" {
       }
     }
   }
+}
+
+resource "aws_s3_bucket_policy" "this" {
+  condition = var.attach_policy ? 1 : 0
+
+  bucket = aws_s3_bucket.this[0].id
+  policy = var.policy_document
+}
+
+resource "aws_s3_bucket_public_access_block" "this" {
+  condition = var.attach_policy ? 1 : 0
+
+  bucket = var.attach_policy ? aws_s3_bucket_policy.this[0].id : aws_s3_bucket.this[0].id
+
+  block_public_acls       = var.block_public_acls
+  block_public_policy     = var.block_public_policy
+  ignore_public_acls      = var.ignore_public_acls
+  restrict_public_buckets = var.restrict_public_buckets
+}
 
   
 
