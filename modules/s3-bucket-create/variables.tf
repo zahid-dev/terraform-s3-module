@@ -94,9 +94,9 @@ variable "attach_policy" {
 }
 
 variable "policy_document" {
-  description = "Map of strings containing policy that is to be attached to S3."
-  type        = map(string)
-  default     = {}
+  description = "String containing policy that is to be attached to S3."
+  type        = string
+  default     = ""
 }
 
 variable "block_public_acls" {
